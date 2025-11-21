@@ -1,3 +1,4 @@
+import time
 import random
 import cv2 as cv
 from ultralytics import YOLO
@@ -9,17 +10,26 @@ def get_color(class_num):
 
 
 def main():
+    """
+    Reference:
+    https://docs.ultralytics.com/reference/engine/model/#ultralytics.engine.model.Model.track
+    https://docs.ultralytics.com/reference/engine/results/#ultralytics.engine.results.Results
+    https://docs.ultralytics.com/reference/engine/results/#ultralytics.engine.results.Boxes
+    """
+
+    src = "./assets/car.mp4"
+    # src = 0
     yolo = YOLO("yolov8s.pt")
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(src)
     if not cap.isOpened():
         print("Cannot open camera")
         exit()
 
+    prev_time = time.time()
+
     while True:
-        # Capture frame-by-frame
         ret, frame = cap.read()
 
-        # if frame is read correctly ret is True
         if not ret:
             print("Can't receive frame (stream end?). Exiting ...")
             break
@@ -43,13 +53,17 @@ def main():
                                (x1, max(y1 - 10, 20)),
                                cv.FONT_HERSHEY_SIMPLEX,
                                0.6, colour, 2)
-        # Our operations on the frame come here
-        # Display the resulting frame
+
+        current_time = time.time()
+        fps = 1 / (current_time - prev_time)
+        prev_time = current_time
+        cv.putText(frame, f"FPS: {fps:.2f}", (10, 30),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
         cv.imshow('YOLO Object Detection ', frame)
         if cv.waitKey(1) == ord('q'):
             break
 
-    # When everything done, release the capture
     cap.release()
     cv.destroyAllWindows()
 
